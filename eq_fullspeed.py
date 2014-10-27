@@ -38,7 +38,7 @@ def streaming():
     ACCESS_TOKEN_SECRET = ''
     consumer = oauth.Consumer(key=CONSUMER_KEY, secret=CONSUMER_SECRET)
     token = oauth.Token(key=ACCESS_TOKEN_KEY, secret=ACCESS_TOKEN_SECRET)
-    url = 'https://stream.twitter.com/1.1/statuses/filter.json?locations=-180,-90,180,90'
+    url = 'https://stream.twitter.com/1.1/statuses/sample.json'
     params = {}
     request = oauth.Request.from_consumer_and_token(consumer, token, http_url=url, parameters=params)
     request.sign_request(oauth.SignatureMethod_HMAC_SHA1(), consumer, token)
@@ -50,21 +50,12 @@ def streaming():
         for r in res:
             try:
                 data = json.loads(r)
-                reply_text = data['text'].encode('utf_8').replace('\n', '')
-                if reply_text.find("earthquake")!=-1 or\
-                    reply_text.find("Erdbeben")!=-1 or\
-                    reply_text.find("地震")!=-1:
-                    location = str(data['geo']['coordinates'])
-                    location = location.replace('[','')
-                    location = location.replace(']','')
-                    location = location.replace(' ','')
-                    location_str = location.split(',')
-                    time = str(data['created_at']).split(' ')
-                    send_data = {'year':time[5],'month':time[1],'date':time[2],'time':time[3],'longitude':location_str[1],'latitude':location_str[0]}
-                    send_json = json.dumps(send_data)
-                    kinesis.put_record('TwitterStreamTest',send_json,'one')
+                time = str(data['created_at']).split(' ')
+                send_data = {'year':time[5],'month':time[1],'date':time[2],'time':time[3]}
+                send_json = json.dumps(send_data)
+                kinesis.put_record('TwitterStreamTest',send_json,'one')
             except:
-                continue
+            continue
 
 if __name__ == '__main__':
     global kinesis
